@@ -15,6 +15,7 @@ class UserManager(BaseUserManager):
             **extra_fields
         )
         user.set_password(password)
+        user.groups.add(1)
         user.save(using=self.db)
         return user
 
