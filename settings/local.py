@@ -5,7 +5,7 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'eShop',
+        'NAME': 'eshopdb',
         'USER': 'postgres',
         'PASSWORD': 's3cret',
         # 'HOST': 'Servers.postgres.database.azure.com',

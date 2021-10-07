@@ -28,7 +28,7 @@ class UserPermissions(BasePermission):
 class user_list_view(APIView):
     permission_classes = [UserPermissions,]
 
-    def get(request):
+    def get(self,request):
         users = User.objects.all().values('id','email','password','name','last_name')
         users_serializer = UserListSerializer(users,many = True)
         return Response(users_serializer.data,status = status.HTTP_200_OK)
@@ -45,7 +45,7 @@ class user_detail_view(APIView):
     
     def put(self,request,pk):
         user = User.objects.filter(id = pk).first()
-        self.check_object_permissions(request, contact)
+        self.check_object_permissions(request, user)
         user_serializer = UserSerializer(user,data = request.data)
         if user_serializer.is_valid():
             user_serializer.save()
@@ -61,20 +61,23 @@ class user_detail_view(APIView):
 
 class registration_view(APIView):
 
-    def post(request):
+    def post(self,request):
         serializer = RegisterUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             return Response({'message':'User created seccesfully!'},status = status.HTTP_201_CREATED)
         else:
-            data = serializer.errors
-            return Response(user_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+            return Response({'message':'There was and errror!', 'detail': serializer.errors},status = status.HTTP_400_BAD_REQUEST)
+            
+            
 
 class log_out(APIView):
     
-    def get(request):
-        refresh_token = request.data["refresh_token"]
-        refreshToken = RefreshToken(refresh_token)
-        refreshToken.blacklist()
-
-        return Response({'message':'Token Deleted Succesfully'},status = status.HTTP_202_OK)
+    def get(self,request):
+        try:
+            refresh_token = request.GET["refresh_token"]
+            refreshToken = RefreshToken(refresh_token)
+            refreshToken.blacklist()
+            return Response({'message':'Token Deleted Succesfully'},status = status.HTTP_200_OK)
+        except:
+            return Response({'message':'There was and error'},status = status.HTTP_400_BAD_REQUEST)

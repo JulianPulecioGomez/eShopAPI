@@ -34,8 +34,9 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [ 'email', 'name', 'last_name', 'password', 'confirm_password']
+        fields = [ 'email', 'name', 'last_name', 'phone', 'document_type', 'document', 'password', 'confirm_password']
         extra_fields = {
+            'other_last_name' : '',
             'password': {'write_only':True}
         }
     
@@ -43,7 +44,10 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         user = User(
             email = self.validated_data.get('email'),
             name = self.validated_data.get('name'),
-            last_name = self.validated_data.get('last_name')
+            last_name = self.validated_data.get('last_name'),
+            phone = self.validated_data.get('phone'),
+            document_type = self.validated_data.get('document_type'),
+            document = self.validated_data.get('document'),
         )
 
         password = self.validated_data.get('password')

@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'apps.documenttype',
     'apps.users',
     'rest_framework',
     'simple_history',
@@ -107,7 +108,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSIONS_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     )
-    
 }
 
 # Default primary key field type
