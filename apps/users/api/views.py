@@ -1,17 +1,12 @@
 from rest_framework import status
 from rest_framework.response import Response
 from apps.users.api.serializers import RegisterUserSerializer, UserListSerializer, UserSerializer
-from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
-from rest_framework.decorators import api_view, renderer_classes, permission_classes
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from apps.users.models import User
 from rest_framework.permissions import IsAuthenticated, BasePermission
-from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.auth.decorators import permission_required
-from braces.views import GroupRequiredMixin
 from rest_framework.views import APIView
-from braces.views import GroupRequiredMixin
+from django.shortcuts import get_object_or_404
+
 
 class UserPermissions(BasePermission):
     message = 'Editing Users is retricted for your role'
@@ -25,59 +20,53 @@ class UserPermissions(BasePermission):
         return request.user and request.user.is_authenticated
 
 
-class user_list_view(APIView):
-    permission_classes = [UserPermissions,]
+class UserListView(APIView):
+    permission_classes = [UserPermissions, ]
 
-    def get(self,request):
-        users = User.objects.all().values('id','email','password','name','last_name')
-        users_serializer = UserListSerializer(users,many = True)
-        return Response(users_serializer.data,status = status.HTTP_200_OK)
+    def get(self, request):
+        users = User.objects.all().values('id', 'email', 'password', 'name', 'last_name')
+        users_serializer = UserListSerializer(users, many=True)
+        return Response(users_serializer.data, status=status.HTTP_200_OK)
 
-class user_detail_view(APIView):
-    permission_classes = [UserPermissions,]
-    
 
-    def get(self,request,pk):
-        user = User.objects.filter(id = pk).first()
-        self.check_object_permissions(request, user)    
-        user_serializer = UserSerializer(user)
-        return Response(user_serializer.data,status = status.HTTP_200_OK)
-    
-    def put(self,request,pk):
-        user = User.objects.filter(id = pk).first()
+class UserDetailView(APIView):
+    permission_classes = [UserPermissions, ]
+
+    def get(self, request, pk):
+        user = get_object_or_404(User, id=pk)
         self.check_object_permissions(request, user)
-        user_serializer = UserSerializer(user,data = request.data)
+        user_serializer = UserSerializer(user)
+        return Response(user_serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        user = get_object_or_404(User, id=pk)
+        self.check_object_permissions(request, user)
+        user_serializer = UserSerializer(user, data=request.data)
         if user_serializer.is_valid():
             user_serializer.save()
-            return Response(user_serializer.data,status = status.HTTP_200_OK)
-        return Response(user_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self,request,pk):
-        user = User.objects.filter(id = pk).first()
-        self.check_object_permissions(request, contact)
-        user.delete()
-        return Response({'message':'User deleted successfully!'},status = status.HTTP_200_OK)
-    
+            return Response(user_serializer.data, status=status.HTTP_200_OK)
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class registration_view(APIView):
 
-    def post(self,request):
+class UserRegistrationView(APIView):
+
+    def post(self, request):
         serializer = RegisterUserSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            return Response({'message':'User created seccesfully!'},status = status.HTTP_201_CREATED)
+            serializer.save()
+            return Response({'message': 'User created successfully!'}, status=status.HTTP_201_CREATED)
         else:
-            return Response({'message':'There was and errror!', 'detail': serializer.errors},status = status.HTTP_400_BAD_REQUEST)
-            
-            
+            return Response({'message': 'There was and error!', 'detail': serializer.errors},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-class log_out(APIView):
-    
-    def get(self,request):
+
+class UserLogOut(APIView):
+
+    def get(self, request):
         try:
             refresh_token = request.GET["refresh_token"]
-            refreshToken = RefreshToken(refresh_token)
-            refreshToken.blacklist()
-            return Response({'message':'Token Deleted Succesfully'},status = status.HTTP_200_OK)
+            refresh_token = RefreshToken(refresh_token)
+            refresh_token.blacklist()
+            return Response({'message': 'Token Deleted Succesfully'}, status=status.HTTP_200_OK)
         except:
-            return Response({'message':'There was and error'},status = status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'There was and error'}, status=status.HTTP_400_BAD_REQUEST)

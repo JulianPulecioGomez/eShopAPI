@@ -24,12 +24,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.documenttype',
-    'apps.users',
-    'rest_framework',
     'simple_history',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'apps',
+    'apps.documenttype',
+    'apps.users',
+    'apps.tags',
+    'apps.products',
+    'rest_framework',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -108,6 +112,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSIONS_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     )
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
 }
 
 # Default primary key field type
