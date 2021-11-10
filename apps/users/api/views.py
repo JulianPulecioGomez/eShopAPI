@@ -1,11 +1,15 @@
 from rest_framework import status
 from rest_framework.response import Response
-from apps.users.api.serializers import RegisterUserSerializer, UserListSerializer, UserSerializer
+from apps.users.api.serializers import UserSerializer, UserRegistrationSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from apps.users.models import User
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from django.views.decorators.csrf import csrf_exempt
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 
 class UserPermissions(BasePermission):
@@ -20,53 +24,83 @@ class UserPermissions(BasePermission):
         return request.user and request.user.is_authenticated
 
 
-class UserListView(APIView):
-    permission_classes = [UserPermissions, ]
+class UserViewSet(viewsets.ViewSet):
+    queryset = User.objects.all().filter(is_active=True)
+    serializer = UserSerializer
 
-    def get(self, request):
-        users = User.objects.all().values('id', 'email', 'password', 'name', 'last_name')
-        users_serializer = UserListSerializer(users, many=True)
-        return Response(users_serializer.data, status=status.HTTP_200_OK)
+    # permission_classes = [UserPermissions]
 
+    def list(self, request):
+        serializer = self.serializer(self.queryset, many=True)
+        return Response(serializer.data)
 
-class UserDetailView(APIView):
-    permission_classes = [UserPermissions, ]
+    def retrieve(self, request, pk=None):
+        user = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.serializer(user)
+        return Response(serializer.data)
 
-    def get(self, request, pk):
-        user = get_object_or_404(User, id=pk)
-        self.check_object_permissions(request, user)
-        user_serializer = UserSerializer(user)
-        return Response(user_serializer.data, status=status.HTTP_200_OK)
+    def partial_update(self, request, pk=None):
+        user = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-    def put(self, request, pk):
-        user = get_object_or_404(User, id=pk)
-        self.check_object_permissions(request, user)
-        user_serializer = UserSerializer(user, data=request.data)
-        if user_serializer.is_valid():
-            user_serializer.save()
-            return Response(user_serializer.data, status=status.HTTP_200_OK)
-        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserRegistrationView(APIView):
-
-    def post(self, request):
-        serializer = RegisterUserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'User created successfully!'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'message': 'There was and error!', 'detail': serializer.errors},
-                            status=status.HTTP_400_BAD_REQUEST)
+    def destroy(self, request, pk=None):
+        user = get_object_or_404(self.queryset, pk=pk)
+        user.delete()
+        return Response()
 
 
-class UserLogOut(APIView):
+class UserRegistrationViewSet(viewsets.ViewSet):
+    queryset = User.objects.all()
+    serializer = UserRegistrationSerializer
+    # permission_classes = [UserPermissions]
 
-    def get(self, request):
-        try:
-            refresh_token = request.GET["refresh_token"]
-            refresh_token = RefreshToken(refresh_token)
-            refresh_token.blacklist()
-            return Response({'message': 'Token Deleted Succesfully'}, status=status.HTTP_200_OK)
-        except:
-            return Response({'message': 'There was and error'}, status=status.HTTP_400_BAD_REQUEST)
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'email': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='email'
+            ),
+            'name': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='name'
+            ),
+            'last_name': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='last_name'
+            ),
+            'other_last_name': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='last_name'
+            ),
+            'phone': openapi.Schema(
+                type=openapi.TYPE_NUMBER,
+                description='phone'
+            ),
+            'document_type': openapi.Schema(
+                type=openapi.TYPE_NUMBER,
+                description='document_type'
+            ),
+            'document': openapi.Schema(
+                type=openapi.TYPE_NUMBER,
+                description='document'
+            ),
+            'password': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='document'
+            ),
+            'confirm_password': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='document'
+            ),
+
+        }
+    ))
+    def create(self, request):
+        serializer = self.serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
