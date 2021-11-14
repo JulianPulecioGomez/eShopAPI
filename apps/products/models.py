@@ -5,6 +5,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255, blank=False, null=False)
     description = models.CharField(max_length=255, blank=False, null=False)
     price = models.IntegerField(blank=False, null=False)
+    image = models.FileField(max_length=30)
     tags = models.ManyToManyField('tags.Tag')
     stock = models.IntegerField(blank=False, null=False)
     is_active = models.BooleanField(default=True)

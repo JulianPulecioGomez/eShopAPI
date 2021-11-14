@@ -13,6 +13,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'name': instance.name,
             'price': instance.price,
             'stock': instance.stock,
+            'image': instance.image.url,
             'is_active': instance.is_active,
             'tags': instance.tags.all().values('id', 'name')
         }
